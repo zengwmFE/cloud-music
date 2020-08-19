@@ -17,7 +17,7 @@ function Slider(props) {
       })
       setSliderSwiper(newSliderSwiper)
     }
-  }, [bannerList, sliderSwiper])
+  }, [bannerList.length, sliderSwiper])
   return (
     <SliderContainer>
       <div className="before"></div>
