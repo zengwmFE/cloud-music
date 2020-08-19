@@ -1,6 +1,6 @@
-import React, { Component } from 'react'
-import { ListWrapper, ListItem, List } from './style'
+import React from 'react'
 import { getCount } from '../api/utils'
+import { List, ListItem, ListWrapper } from './style'
 function RecommendList(props) {
   return (
     <ListWrapper>
@@ -8,7 +8,7 @@ function RecommendList(props) {
       <List>
         {props.recommandList.map((item, index) => {
           return (
-            <ListItem key={index.id + index}>
+            <ListItem key={item.id + index}>
               <div className="img_wrapper">
                 <div className="decorate"></div>
                 <img
