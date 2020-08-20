@@ -46,11 +46,12 @@ const Scroll = forwardRef((props, ref) => {
       setBScroll(null)
     }
   }, [])
+  // 组件更新的时候需要刷新实例，防止无法滑动
   useEffect(() => {
     if (refresh && bScroll) {
       bScroll.refresh()
     }
-  }, [])
+  })
   useEffect(() => {
     // 给实例绑定scroll事件
     if (!bScroll || !onScroll) return
@@ -87,6 +88,7 @@ const Scroll = forwardRef((props, ref) => {
       bScroll.off('scrollEnd')
     }
   }, [pullUp, bScroll])
+  // 这个hooks为父组件暴露可以调用的方法
   useImperativeHandle(ref, () => ({
     refresh() {
       if (bScroll) {
@@ -104,18 +106,6 @@ const Scroll = forwardRef((props, ref) => {
     <ScrollContainer ref={scrollContainerRef}>{props.children}</ScrollContainer>
   )
 })
-Scroll.propTypes = {
-  direction: PropTypes.oneOf(['vertical', 'horizental']),
-  click: PropTypes.bool, // 是否支持点击
-  refresh: PropTypes.bool, // 是否刷新
-  onScroll: PropTypes.func, // 滑动触发的回调函数
-  pullUpLoading: PropTypes.bool, // 是否显示上拉的动画
-  pullDownLoading: PropTypes.bool, // 是否显示下拉的动画
-  pullUp: PropTypes.func, // 上拉的处理逻辑
-  pullDown: PropTypes.func, // 下拉的处理逻辑
-  bounceTop: PropTypes.bool, // 是否支持吸顶
-  bounceBottom: PropTypes.bool, // 是否支持乡下吸顶
-}
 Scroll.defaultProps = {
   direction: 'vertical',
   click: true,
@@ -127,5 +117,17 @@ Scroll.defaultProps = {
   pullDown: null,
   bounceTop: true,
   bounceBottom: true,
+}
+Scroll.propTypes = {
+  direction: PropTypes.oneOf(['vertical', 'horizental']),
+  click: PropTypes.bool, // 是否支持点击
+  refresh: PropTypes.bool, // 是否刷新
+  onScroll: PropTypes.func, // 滑动触发的回调函数
+  pullUpLoading: PropTypes.bool, // 是否显示上拉的动画
+  pullDownLoading: PropTypes.bool, // 是否显示下拉的动画
+  pullUp: PropTypes.func, // 上拉的处理逻辑
+  pullDown: PropTypes.func, // 下拉的处理逻辑
+  bounceTop: PropTypes.bool, // 是否支持吸顶
+  bounceBottom: PropTypes.bool, // 是否支持乡下吸顶
 }
 export default Scroll

@@ -13,12 +13,14 @@ export const changeRecommendList = (data) => ({
   type: actionType.CHANGE_RECOMMEND_LIST,
   data: fromJS(data),
 })
-
+export const changeEnterLoading = (data) => ({
+  type: actionType.CHANGE_ENTER_LOADING,
+  data: fromJS(data),
+})
 export const getBannerList = () => {
   return (dispatch) => {
     getBannerListRequest()
       .then((data) => {
-        console.log(data, 'data')
         dispatch(changeBannerList(data.banners))
       })
       .catch(() => {
@@ -31,8 +33,8 @@ export const getCommendList = (data) => {
   return (dispatch) => {
     getRecommandListRequest()
       .then((data) => {
-        console.log(data.result, 'data1')
         dispatch(changeRecommendList(data.result))
+        dispatch(changeEnterLoading(false))
       })
       .catch(() => {
         console.log('获取推荐列表失败')
