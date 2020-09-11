@@ -1,8 +1,17 @@
 import React, { useState } from 'react'
+import { connect } from 'react-redux'
 import { alphaTypes, categoryTypes } from '../../api/config'
 import Horizen from '../../baseUI/horizen-item'
 import Scroll from '../../baseUI/scroll'
 import { List, ListContainer, ListItem, NavContainer } from './style'
+const mapStateToProps = (state) => ({
+  singerList: state.getIn(['singers', 'singerList']),
+  enterLoading: state.getIn(['singers', 'enterLoading']),
+  pullUpLoading: state.getIn(['singers', 'pullUpLoading']),
+  pullDownLoading: state.getIn(['singers', 'pullDownLoading']),
+  pageCount: state.getIn(['singers', 'pageCount']),
+})
+const mapDispatchToProps = (dispatch) => ({})
 function Singers() {
   let [category, setCategory] = useState('')
   let [alpha, setAlpha] = useState('')
@@ -65,4 +74,4 @@ function Singers() {
     </div>
   )
 }
-export default React.memo(Singers)
+export default connect(mapStateToProps, mapDispatchToProps)(React.memo(Singers))
