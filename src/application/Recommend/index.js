@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react'
 import { forceCheck } from 'react-lazyload'
-// react-redux为函数组件提供redux所需要的操作，connect
 import { connect } from 'react-redux'
+// react-redux为函数组件提供redux所需要的操作，connect
+import { renderRoutes } from 'react-router-config'
 import Loading from '../../baseUI/loading'
 import Scroll from '../../baseUI/scroll'
 import RecommendList from '../../components/list'
@@ -32,6 +33,7 @@ function Recommend(props) {
         </div>
       </Scroll>
       {enterLoading ? <Loading /> : ''}
+      {renderRoutes(props.route.routes)}
     </Content>
   )
 }

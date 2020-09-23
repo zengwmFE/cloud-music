@@ -8,3 +8,32 @@ export const getCount = (count) => {
     return Math.floor(count / 10000000) / 10 + '亿'
   }
 }
+export const debounce = (func, delay, immdiate) => {
+  var timer, result
+  var debounce = function () {
+    var context = this
+    var args = arguments
+    if (timer) clearTimeout(timer)
+    if (immdiate) {
+      var callNow = !timer
+      // 防止多次点击
+      timer = setTimeout(() => {
+        timer = null
+      }, delay)
+      if (callNow) result = func.apply(context, args)
+    } else {
+      timer = setTimeout(() => {
+        func.apply(context, args)
+      }, delay)
+    }
+    return result
+  }
+  return debounce
+}
+export const filterIndex = (rankList) => {
+  for (let i = 0; i < rankList.length - 1; i++) {
+    if (rankList[i].tracks.length && !rankList[i + 1].tracks.length) {
+      return i + 1
+    }
+  }
+}

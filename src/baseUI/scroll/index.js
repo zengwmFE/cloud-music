@@ -4,14 +4,38 @@ import React, {
   forwardRef,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react'
 import styled from 'styled-components'
+import { debounce } from '../../api/utils'
+import LoadingV2 from '../loading-v2/index'
+import Loading from '../loading/index'
 const ScrollContainer = styled.div`
   width: 100%;
   height: 100%;
   overflow: hidden;
+`
+const PullUpLoading = styled.div`
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5px;
+  width: 60px;
+  height: 60px;
+  margin: auto;
+  z-index: 100;
+`
+
+export const PullDownLoading = styled.div`
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0px;
+  height: 30px;
+  margin: auto;
+  z-index: 100;
 `
 const Scroll = forwardRef((props, ref) => {
   const [bScroll, setBScroll] = useState()
@@ -20,7 +44,7 @@ const Scroll = forwardRef((props, ref) => {
     direction,
     click,
     refresh,
-    pullUploading,
+    pullUpLoading,
     pullDownLoading,
     bounceTop,
     bounceBottom,
@@ -28,6 +52,15 @@ const Scroll = forwardRef((props, ref) => {
     pullDown,
     onScroll,
   } = props
+
+  // 依赖一定不能省略，不然拿到得就是第一次缓存到得pullUp函数得引用，相应得闭包作用域变量都是第一次，产生闭包陷阱
+  let pullUpDebounce = useMemo(() => {
+    return debounce(pullUp, 3000)
+  }, [pullUp])
+  let pullDownDebounce = useMemo(() => {
+    return debounce(pullDown, 3000)
+  }, [pullDown])
+
   // 每次重新渲染都要刷新实例
   useEffect(() => {
     const scroll = new BScroll(scrollContainerRef.current, {
@@ -63,31 +96,34 @@ const Scroll = forwardRef((props, ref) => {
       bScroll.off('scroll')
     }
   }, [onScroll, bScroll])
+
   useEffect(() => {
     if (!bScroll || !pullDown) return
-    bScroll.on('scrollEnd', (pos) => {
+    const handlePullDown = (pos) => {
       if (pos.y > 50) {
-        pullDown()
+        pullDownDebounce()
       }
-    })
-    return () => {
-      bScroll.off('scrollEnd')
     }
-  }, [pullDown, bScroll])
+    bScroll.on('scrollEnd', handlePullDown)
+    return () => {
+      bScroll.off('scrollEnd', handlePullDown)
+    }
+  }, [pullDown, pullDownDebounce, bScroll])
 
   useEffect(() => {
     if (!bScroll || !pullUp) return
     // 判断是否滑到底部
-    bScroll.on('scrollEnd', () => {
+    const handlePullUp = () => {
       if (bScroll.y <= bScroll.maxScrollY + 100) {
-        pullUp()
+        pullUpDebounce()
       }
-    })
+    }
+    bScroll.on('scrollEnd', handlePullUp)
 
     return () => {
-      bScroll.off('scrollEnd')
+      bScroll.off('scrollEnd', handlePullUp)
     }
-  }, [pullUp, bScroll])
+  }, [pullUp, pullUpDebounce, bScroll])
   // 这个hooks为父组件暴露可以调用的方法
   useImperativeHandle(ref, () => ({
     refresh() {
@@ -102,8 +138,22 @@ const Scroll = forwardRef((props, ref) => {
       }
     },
   }))
+  const PullUpdisplayStyle = pullUpLoading
+    ? { display: '' }
+    : { display: 'none' }
+  const PullDowndisplayStyle = pullDownLoading
+    ? { display: '' }
+    : { display: 'none' }
   return (
-    <ScrollContainer ref={scrollContainerRef}>{props.children}</ScrollContainer>
+    <ScrollContainer ref={scrollContainerRef}>
+      {props.children}
+      <PullUpLoading style={PullUpdisplayStyle}>
+        <Loading />
+      </PullUpLoading>
+      <PullDownLoading style={PullDowndisplayStyle}>
+        <LoadingV2 />
+      </PullDownLoading>
+    </ScrollContainer>
   )
 })
 Scroll.defaultProps = {
