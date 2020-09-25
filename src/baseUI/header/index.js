@@ -1,4 +1,4 @@
-import propTypes from 'prop-types'
+import PropTypes from 'prop-types'
 import React from 'react'
 import styled from 'styled-components'
 import style from '../../assets/global-style'
@@ -38,8 +38,8 @@ Header.defaultProps = {
   title: '标题',
 }
 Header.propTypes = {
-  handleClick: propTypes.func,
-  title: propTypes.string,
+  handleClick: PropTypes.func,
+  title: PropTypes.string,
 }
 
 export default React.memo(Header)
