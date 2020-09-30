@@ -1,6 +1,7 @@
 import React, { useContext, useEffect } from 'react'
 import LazyLoad, { forceCheck } from 'react-lazyload'
 import { connect } from 'react-redux'
+import { renderRoutes } from 'react-router-config'
 import { alphaTypes, categoryTypes } from '../../api/config'
 import Horizen from '../../baseUI/horizen-item'
 import Scroll from '../../baseUI/scroll'
@@ -79,13 +80,21 @@ function Singers(props) {
       getHotSingerDispatch()
     }
   }, [])
+  const enterDetail = (id) => {
+    props.history.push(`/singers/${id}`)
+  }
   // 渲染函数，返回歌手列表
   const renderSingerList = () => {
     return (
       <List>
         {singerList.toJS().map((item, index) => {
           return (
-            <ListItem key={item.accountId + '' + index}>
+            <ListItem
+              key={item.accountId + '' + index}
+              onClick={() => {
+                enterDetail(item.id)
+              }}
+            >
               <div className="img_wrapper">
                 <LazyLoad
                   placeholder={
@@ -158,6 +167,7 @@ function Singers(props) {
           </Scroll>
         </ListContainer>
       </Data>
+      {renderRoutes(props.route.routes)}
     </div>
   )
 }

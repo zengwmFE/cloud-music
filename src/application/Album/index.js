@@ -1,97 +1,62 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { CSSTransition } from 'react-transition-group'
 import Header from '../../baseUI/header/index'
 import { Container, TopDesc, Menu, SongList, SongItem } from './style'
-import { getCount, getName } from '../../api/utils'
+import { getCount, getName, isEmptyObj } from '../../api/utils'
 import Scroll from '../../baseUI/scroll/index'
+import style from '../../assets/global-style'
+import { connect } from 'react-redux'
+import { changeEnterLoading, getAlbumList } from './store/actionCreator'
+import Loading from '../../baseUI/loading/index'
+export const HEADER_HEIGHT = 45
+const mapStateToProps = (state) => {
+  return {
+    currentAlbum: state.getIn(['album', 'currentAlbum']),
+    enterLoading: state.getIn(['album', 'enterLoading']),
+  }
+}
+const mapDispatchToProps = (dispatch) => ({
+  getAlbumListDispatch(id) {
+    dispatch(changeEnterLoading(true))
+    dispatch(getAlbumList(id))
+  },
+})
 function Album(props) {
+  const { currentAlbum: currentAlbumImmutable, enterLoading } = props
+  const { getAlbumListDispatch } = props
+  const id = props.match.params.id
   const [showStatus, setShowStatus] = useState(true)
-  const handleBack = () => {
+  const [title, setTitle] = useState('歌单')
+
+  const [isMarquee, setIsMarquee] = useState(false) // 是否支持跑马灯
+  const headerEl = useRef()
+  useEffect(() => {
+    getAlbumListDispatch(id)
+  }, [getAlbumListDispatch, id])
+  const handleBack = useCallback(() => {
     setShowStatus(false)
-  }
-  const currentAlbum = {
-    creator: {
-      avatarUrl:
-        'http://p1.music.126.net/O9zV6jeawR43pfiK2JaVSw==/109951164232128905.jpg',
-      nickname: '浪里推舟',
+  }, [])
+  const currentAlbum = currentAlbumImmutable.toJS()
+  const handleScroll = useCallback(
+    (pos) => {
+      let minScrollY = -HEADER_HEIGHT
+      let percent = Math.abs(pos.y / minScrollY)
+      let headerDom = headerEl.current
+      // 滑过顶部的高度开始变化
+      if (pos.y < minScrollY) {
+        headerDom.style.backgroundColor = style['theme-color']
+        headerDom.style.opacity = Math.min(1, (percent - 1) / 2)
+        setTitle(currentAlbum.name)
+        setIsMarquee(true)
+      } else {
+        headerDom.style.backgroundColor = ''
+        headerDom.style.opacity = 1
+        setTitle('歌单')
+        setIsMarquee(false)
+      }
     },
-    coverImgUrl:
-      'http://p2.music.126.net/ecpXnH13-0QWpWQmqlR0gw==/109951164354856816.jpg',
-    subscribedCount: 2010711,
-    name: '听完就睡，耳机是天黑以后柔软的梦境',
-    tracks: [
-      {
-        name: '我真的受伤了',
-        ar: [{ name: '张学友' }, { name: '周华健' }],
-        al: {
-          name: '学友 热',
-        },
-      },
-      {
-        name: '我真的受伤了',
-        ar: [{ name: '张学友' }, { name: '周华健' }],
-        al: {
-          name: '学友 热',
-        },
-      },
-      {
-        name: '我真的受伤了',
-        ar: [{ name: '张学友' }, { name: '周华健' }],
-        al: {
-          name: '学友 热',
-        },
-      },
-      {
-        name: '我真的受伤了',
-        ar: [{ name: '张学友' }, { name: '周华健' }],
-        al: {
-          name: '学友 热',
-        },
-      },
-      {
-        name: '我真的受伤了',
-        ar: [{ name: '张学友' }, { name: '周华健' }],
-        al: {
-          name: '学友 热',
-        },
-      },
-      {
-        name: '我真的受伤了',
-        ar: [{ name: '张学友' }, { name: '周华健' }],
-        al: {
-          name: '学友 热',
-        },
-      },
-      {
-        name: '我真的受伤了',
-        ar: [{ name: '张学友' }, { name: '周华健' }],
-        al: {
-          name: '学友 热',
-        },
-      },
-      {
-        name: '我真的受伤了',
-        ar: [{ name: '张学友' }, { name: '周华健' }],
-        al: {
-          name: '学友 热',
-        },
-      },
-      {
-        name: '我真的受伤了',
-        ar: [{ name: '张学友' }, { name: '周华健' }],
-        al: {
-          name: '学友 热',
-        },
-      },
-      {
-        name: '我真的受伤了',
-        ar: [{ name: '张学友' }, { name: '周华健' }],
-        al: {
-          name: '学友 热',
-        },
-      },
-    ],
-  }
+    [currentAlbum]
+  )
   const renderTopDesc = () => {
     return (
       <TopDesc background={currentAlbum.coverImgUrl}>
@@ -162,7 +127,7 @@ function Album(props) {
         <SongItem>
           {currentAlbum.tracks.map((item, index) => {
             return (
-              <list key={index}>
+              <li key={index}>
                 <span className="index">{index + 1}</span>
                 <div className="info">
                   <span>{item.name}</span>
@@ -170,7 +135,7 @@ function Album(props) {
                     {getName(item.ar)}-{item.al.name}
                   </span>
                 </div>
-              </list>
+              </li>
             )
           })}
         </SongItem>
@@ -187,16 +152,24 @@ function Album(props) {
       onExited={props.history.goBack}
     >
       <Container>
-        <Header title={'返回'} handleClick={handleBack}></Header>
-        <Scroll bounceTop={false}>
-          <div>
-            {renderTopDesc()}
-            {renderMenu()}
-            {renderSongList()}
-          </div>
-        </Scroll>
+        <Header
+          ref={headerEl}
+          title={title}
+          handleClick={handleBack}
+          isMarquee={isMarquee}
+        ></Header>
+        {!isEmptyObj(currentAlbum) ? (
+          <Scroll bounceTop={false} onScroll={handleScroll}>
+            <div>
+              {renderTopDesc()}
+              {renderMenu()}
+              {renderSongList()}
+            </div>
+          </Scroll>
+        ) : null}
+        {enterLoading ? <Loading></Loading> : null}
       </Container>
     </CSSTransition>
   )
 }
-export default Album
+export default connect(mapStateToProps, mapDispatchToProps)(React.memo(Album))

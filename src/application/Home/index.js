@@ -1,7 +1,7 @@
 import React from 'react'
 import { renderRoutes } from 'react-router-config'
-import { Top, Tab, TabItem } from './style'
 import { NavLink } from 'react-router-dom'
+import { Tab, TabItem, Top } from './style'
 function Home(props) {
   const { route } = props
   console.log(route)

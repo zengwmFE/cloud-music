@@ -4,6 +4,7 @@ import Album from '../application/Album/index'
 import Home from '../application/Home/index'
 import Rank from '../application/Rank/index'
 import Recommend from '../application/Recommend/index'
+import Singer from '../application/Singer'
 import Singers from '../application/Singers/index'
 export default [
   {
@@ -28,10 +29,23 @@ export default [
       {
         path: '/singers',
         component: Singers,
+        key: 'singers',
+        routes: [
+          {
+            path: '/singers/:id',
+            component: Singer,
+          },
+        ],
       },
       {
         path: '/rank',
         component: Rank,
+        routes: [
+          {
+            path: '/rank/:id',
+            component: Album,
+          },
+        ],
       },
     ],
   },

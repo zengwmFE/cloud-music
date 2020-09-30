@@ -1,7 +1,6 @@
 import BScroll from 'better-scroll'
 import PropTypes from 'prop-types'
 import React, {
-  forwardRef,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -37,7 +36,7 @@ export const PullDownLoading = styled.div`
   margin: auto;
   z-index: 100;
 `
-const Scroll = forwardRef((props, ref) => {
+const Scroll = React.forwardRef((props, ref) => {
   const [bScroll, setBScroll] = useState()
   const scrollContainerRef = useRef()
   const {
@@ -55,10 +54,10 @@ const Scroll = forwardRef((props, ref) => {
 
   // 依赖一定不能省略，不然拿到得就是第一次缓存到得pullUp函数得引用，相应得闭包作用域变量都是第一次，产生闭包陷阱
   let pullUpDebounce = useMemo(() => {
-    return debounce(pullUp, 3000)
+    return debounce(pullUp, 300)
   }, [pullUp])
   let pullDownDebounce = useMemo(() => {
-    return debounce(pullDown, 3000)
+    return debounce(pullDown, 300)
   }, [pullDown])
 
   // 每次重新渲染都要刷新实例
@@ -74,6 +73,7 @@ const Scroll = forwardRef((props, ref) => {
       },
     })
     setBScroll(scroll)
+    console.log(scroll)
     return () => {
       // return值，相当于在页面卸载的时候，运行里面的代码
       setBScroll(null)
