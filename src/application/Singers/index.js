@@ -5,6 +5,7 @@ import { renderRoutes } from 'react-router-config'
 import { alphaTypes, categoryTypes } from '../../api/config'
 import Horizen from '../../baseUI/horizen-item'
 import Scroll from '../../baseUI/scroll'
+import Player from '../Player/index'
 import {
   CategoryDataContext,
   CHANGE_ALPHA,
@@ -166,6 +167,7 @@ function Singers(props) {
             {renderSingerList()}
           </Scroll>
         </ListContainer>
+        <Player />
       </Data>
       {renderRoutes(props.route.routes)}
     </div>
