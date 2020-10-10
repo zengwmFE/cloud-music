@@ -1,5 +1,3 @@
-import { CDWrapper } from "../application/Player/normalPlayer/style"
-
 export const getCount = (count) => {
   if (count < 0) return
   if (count < 10000) {
@@ -52,30 +50,40 @@ export const getName = (list) => {
 
 export const isEmptyObj = (obj) => !obj || Object.keys(obj).length === 0
 
-
-let elementStyle = document.createElement("div").style
-let vendor = (()=>{
+let elementStyle = document.createElement('div').style
+let vendor = (() => {
   let transformNames = {
     webkit: 'webkitTransform',
     Moz: 'MozTransform',
     O: 'OTransform',
     ms: 'msTransform',
-    standard: 'Transform'
+    standard: 'Transform',
   }
-  for(let key in transformNames){
-    if(elementStyle[transformNames[key]]!==undefined){
+  for (let key in transformNames) {
+    if (elementStyle[transformNames[key]] !== undefined) {
       return key
     }
   }
   return false
-})();
+})()
 
-export function prefixStyle(style){
-  if(vendor===false){
+export function prefixStyle(style) {
+  if (vendor === false) {
     return false
   }
-  if(vendor===false){
+  if (vendor === false) {
     return style
   }
-  return vendor+style.charAt(0).toUpperCase()+style.substr(1)
+  return vendor + style.charAt(0).toUpperCase() + style.substr(1)
+}
+
+export const getSongUrl = (id) => {
+  return `https://music.163.com/song/media/outer/url?id=${id}.mp3`
+}
+
+export const formatPlayTime = (interval) => {
+  interval = interval | 0
+  const minute = (interval / 60) | 0
+  const second = (interval % 60).toString().padStart(2, '0')
+  return `${minute}:${second}`
 }
