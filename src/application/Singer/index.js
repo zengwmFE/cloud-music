@@ -1,19 +1,20 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { connect } from 'react-redux'
 import { CSSTransition } from 'react-transition-group'
+import { HEADER_HEIGHT } from '../../api/config'
+import Header from '../../baseUI/header'
+import Loading from '../../baseUI/loading'
+import MusicNote from '../../baseUI/music-note'
+import Scroll from '../../baseUI/scroll/index'
+import SongsList from '../SongsList'
+import { changeEnterLoading, getArtistInfo } from './store/actionCreator'
 import {
+  BgLayer,
+  CollectButton,
   Container,
   ImgWrapper,
-  CollectButton,
   SongListWrapper,
-  BgLayer,
 } from './style'
-import Header from '../../baseUI/header'
-import SongsList from '../SongsList'
-import Scroll from '../../baseUI/scroll/index'
-import { HEADER_HEIGHT } from '../../api/config'
-import { connect } from 'react-redux'
-import { changeEnterLoading, getArtistInfo } from './store/actionCreator'
-import Loading from '../../baseUI/loading'
 const mapStateToProps = (state) => ({
   enterLoading: state.getIn(['singer', 'enterLoading']),
   artist: state.getIn(['singer', 'artist']),
@@ -34,6 +35,7 @@ function Singer(props) {
   const songScroll = useRef()
   const header = useRef()
   const layer = useRef()
+  const musicNoteRef = useRef()
   // 图片初始高度
   const initalHeight = useRef(0)
   const { getArtistDispath } = props
@@ -87,7 +89,9 @@ function Singer(props) {
       imageDOM.style.zIndex = 99
     }
   }, [])
-
+  const musicAnimation = (x, y) => {
+    musicNoteRef.current.startAnimation({ x, y })
+  }
   const setShowStatusFalse = useCallback(() => {
     setShowStatus(false)
   })
@@ -114,12 +118,17 @@ function Singer(props) {
           <span className="text">收藏</span>
         </CollectButton>
         <BgLayer ref={layer}></BgLayer>
-        <SongListWrapper className="hahah" ref={songScrollWrapper}>
+        <SongListWrapper ref={songScrollWrapper}>
           <Scroll ref={songScroll} onScroll={handleScroll}>
-            <SongsList songs={songs} showCollect={false}></SongsList>
+            <SongsList
+              songs={songs}
+              showCollect={false}
+              musicAnimation={musicAnimation}
+            ></SongsList>
           </Scroll>
         </SongListWrapper>
         {enterLoading ? <Loading /> : null}
+        <MusicNote ref={musicNoteRef}></MusicNote>
       </Container>
     </CSSTransition>
   )

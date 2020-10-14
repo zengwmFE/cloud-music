@@ -1,13 +1,15 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { CSSTransition } from 'react-transition-group'
-import Header from '../../baseUI/header/index'
-import { Container, TopDesc, Menu, SongList, SongItem } from './style'
-import { getCount, getName, isEmptyObj } from '../../api/utils'
-import Scroll from '../../baseUI/scroll/index'
-import style from '../../assets/global-style'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { connect } from 'react-redux'
-import { changeEnterLoading, getAlbumList } from './store/actionCreator'
+import { CSSTransition } from 'react-transition-group'
+import { getCount, getName, isEmptyObj } from '../../api/utils'
+import style from '../../assets/global-style'
+import Header from '../../baseUI/header/index'
 import Loading from '../../baseUI/loading/index'
+import MusicNote from '../../baseUI/music-note'
+import Scroll from '../../baseUI/scroll/index'
+import SongsList from '../SongsList'
+import { changeEnterLoading, getAlbumList } from './store/actionCreator'
+import { Container, Menu, SongItem, SongList, TopDesc } from './style'
 export const HEADER_HEIGHT = 45
 const mapStateToProps = (state) => {
   return {
@@ -27,9 +29,12 @@ function Album(props) {
   const id = props.match.params.id
   const [showStatus, setShowStatus] = useState(true)
   const [title, setTitle] = useState('歌单')
-
+  const musicNoteRef = useRef()
   const [isMarquee, setIsMarquee] = useState(false) // 是否支持跑马灯
   const headerEl = useRef()
+  const musicAnimation = (x, y) => {
+    musicNoteRef.current.startAnimation({ x, y })
+  }
   useEffect(() => {
     getAlbumListDispatch(id)
   }, [getAlbumListDispatch, id])
@@ -163,11 +168,18 @@ function Album(props) {
             <div>
               {renderTopDesc()}
               {renderMenu()}
-              {renderSongList()}
+              <SongsList
+                songs={currentAlbum.tracks}
+                collectCount={currentAlbum.subscribedCount}
+                showCollect={true}
+                showBackground={true}
+                musicAnimation={musicAnimation}
+              ></SongsList>
             </div>
           </Scroll>
         ) : null}
         {enterLoading ? <Loading></Loading> : null}
+        <MusicNote ref={musicNoteRef}></MusicNote>
       </Container>
     </CSSTransition>
   )

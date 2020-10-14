@@ -87,3 +87,25 @@ export const formatPlayTime = (interval) => {
   const second = (interval % 60).toString().padStart(2, '0')
   return `${minute}:${second}`
 }
+
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min)
+}
+
+export function shuffle(arr) {
+  let new_arr = []
+  arr.forEach((item) => {
+    new_arr.push(item)
+  })
+  for (let i = 0; i < new_arr.length; i++) {
+    let j = getRandomInt(0, i)
+    let t = new_arr[i]
+    new_arr[i] = new_arr[j]
+    new_arr[j] = t
+  }
+  return new_arr
+}
+
+export const findIndex = (song, list) => {
+  return list.findIndex((item) => song.id === item.id)
+}

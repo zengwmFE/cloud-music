@@ -47,6 +47,7 @@
     ]
   },
   "devDependencies": {
-    "props-type": "^1.0.1"
+    "props-type": "^1.0.1",
+    "redux-devtools-extension": "^2.13.8"
   }
 }
