@@ -5,6 +5,7 @@ import { findIndex, getSongUrl, isEmptyObj, shuffle } from '../../api/utils'
 import Toast from './../../baseUI/Toast/index'
 import MiniPlayer from './miniPlayer/index'
 import NormalPlayer from './normalPlayer/index'
+import PlayList from './playList/index'
 import {
   changeCurrentIndex,
   changeCurrentSong,
@@ -35,6 +36,7 @@ function Player(props) {
   const audioRef = useRef()
   const [modeText, setModeText] = useState('')
   const toastRef = useRef()
+  const songReady = useRef(true)
   const {
     togglePlayingDispatch,
     toggleFullScreenDispatch,
@@ -118,27 +120,34 @@ function Player(props) {
       handleNext()
     }
   }
-
+  const handleError = () => {
+    songReady.current = true
+    alert('播放出错')
+  }
   useEffect(() => {
     if (
       !playList.length ||
       currentIndex === -1 ||
       !playList[currentIndex] ||
-      playList[currentIndex].id === preSong.id
+      playList[currentIndex].id === preSong.id ||
+      !songReady.current
     )
       return
     let current = playList[currentIndex]
 
     changeCurrentDispatch(current)
     setPreSong(current)
+    songReady.current = false // 把标志位置为 false, 表示现在新的资源没有缓冲完成，不能切歌
     audioRef.current.src = getSongUrl(current.id)
     setTimeout(() => {
       audioRef.current.play()
+      songReady.current = true
     })
     togglePlayingDispatch(true)
     setCurrentTime(0)
     setDuration((current.dt / 1000) | 0)
   }, [playList, currentIndex])
+
   useEffect(() => {
     playing ? audioRef.current.play() : audioRef.current.pause()
   }, [playing])
@@ -154,6 +163,7 @@ function Player(props) {
           currentTime={currentTime}
           percent={percent}
           toggleFullScreen={toggleFullScreenDispatch}
+          togglePlayList={togglePlayListDispatch}
         />
       ) : null}
       {!isEmptyObj(currentSong) ? (
@@ -169,6 +179,7 @@ function Player(props) {
           handlePrev={handlePrev}
           handleNext={handleNext}
           toggleFullScreen={toggleFullScreenDispatch}
+          togglePlayList={togglePlayListDispatch}
           mode={mode}
           changeMode={changeMode}
         />
@@ -177,8 +188,10 @@ function Player(props) {
         ref={audioRef}
         onTimeUpdate={updateTime}
         onEnded={handleEnd}
+        onError={handleError}
       ></audio>
       <Toast text={modeText} ref={toastRef} />
+      <PlayList></PlayList>
     </div>
   )
 }
@@ -200,6 +213,7 @@ const mapDispatchToProps = (dispatch) => ({
     dispatch(changeFullScreen(data))
   },
   togglePlayListDispatch(data) {
+    console.log(data, 'data')
     dispatch(changeShowPlayList(data))
   },
   toggleCurrentIndexDipatch(data) {

@@ -7,6 +7,7 @@ import Loading from '../../baseUI/loading'
 import Scroll from '../../baseUI/scroll'
 import RecommendList from '../../components/list'
 import Slider from '../../components/slider'
+import Player from '../Player'
 import * as actionType from './store/actionCreator'
 import { Content } from './style'
 function Recommend(props) {
@@ -14,6 +15,7 @@ function Recommend(props) {
   const { bannerList, recommendList, enterLoading } = props
   const scrollRef = useRef()
   const { getBannerDataDispatch, getRecommendListDataDispatch } = props
+  const { songsCount } = props
   useEffect(() => {
     if (!bannerList.size) {
       getBannerDataDispatch()
@@ -25,7 +27,7 @@ function Recommend(props) {
   const bannerListJS = bannerList ? bannerList.toJS() : []
   const recommendListJS = recommendList ? recommendList.toJS() : []
   return (
-    <Content>
+    <Content play={songsCount}>
       <Scroll className="list" ref={scrollRef} onScroll={forceCheck}>
         <div>
           <Slider bannerList={bannerListJS} />
@@ -33,6 +35,7 @@ function Recommend(props) {
         </div>
       </Scroll>
       {enterLoading ? <Loading /> : ''}
+      <Player />
       {renderRoutes(props.route.routes)}
     </Content>
   )
@@ -42,6 +45,7 @@ const mapStateToProps = (state) => ({
   bannerList: state.getIn(['recommend', 'bannerList']),
   recommendList: state.getIn(['recommend', 'recommendList']),
   enterLoading: state.getIn(['recommend', 'enterLoading']),
+  songsCount: state.getIn(['player', 'playList']).size,
 })
 // 将dispatch映射到props
 const mapDispatchToProps = (dispatch) => {

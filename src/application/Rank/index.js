@@ -3,11 +3,13 @@ import { connect } from 'react-redux'
 import { renderRoutes } from 'react-router-config'
 import { filterIndex } from '../../api/utils'
 import Scroll from '../../baseUI/scroll/index'
+import Player from '../Player'
 import { getRankList } from './store/actionCreator'
 import { Container, List, ListItem, SongList } from './style'
 const mapStateToProps = (state) => ({
   rankList: state.getIn(['rank', 'rankList']),
   loading: state.getIn(['rank', 'loading']),
+  songsCount: state.getIn(['player', 'playList']).size,
 })
 const mapDispatchToProps = (dispatch) => ({
   getRankListDispatch() {
@@ -15,7 +17,7 @@ const mapDispatchToProps = (dispatch) => ({
   },
 })
 function Rank(props) {
-  const { rankList: list } = props
+  const { rankList: list, songsCount } = props
   const { loading } = props
   const { getRankListDispatch } = props
   let rankList = list ? list.toJS() : []
@@ -68,7 +70,7 @@ function Rank(props) {
   }
   let displayStyle = loading ? { display: 'none' } : { display: '' }
   return (
-    <Container>
+    <Container play={songsCount}>
       <Scroll>
         <div>
           <h1 className="offical" style={displayStyle}>
@@ -81,6 +83,7 @@ function Rank(props) {
           {renderRankList(globalList, true)}
         </div>
       </Scroll>
+      <Player />
       {renderRoutes(props.route.routes)}
     </Container>
   )
