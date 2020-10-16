@@ -48,9 +48,8 @@ export const changeShowPlayList = (data) => ({
 })
 
 export const deleteSong = (data) => {
-  console.log(data)
   return {
     type: DELETE_SONG,
-    data: fromJS(data),
+    data: data,
   }
 }

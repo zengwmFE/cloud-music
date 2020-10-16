@@ -107,5 +107,6 @@ export function shuffle(arr) {
 }
 
 export const findIndex = (song, list) => {
+  console.log(song.id)
   return list.findIndex((item) => song.id === item.id)
 }

@@ -1,16 +1,28 @@
+/*
+ * @Author: levi
+ * @Date: 2020-10-16 14:40:48
+ * @Last Modified by: levi
+ * @Last Modified time: 2020-10-16 19:01:10
+ */
+
 import React, { useCallback, useRef, useState } from 'react'
 import { connect } from 'react-redux'
 import { CSSTransition } from 'react-transition-group'
 import { playMode } from '../../../api/config'
 import { getName, prefixStyle } from '../../../api/utils'
+import Confirm from '../../../baseUI/confirm/index'
 import Scroll from '../../../baseUI/scroll'
 import {
   changeCurrentIndex,
+  changeCurrentSong,
   changePlayList,
   changePlayMode,
+  changePlayState,
+  changeSequecePlayList,
   changeShowPlayList,
   deleteSong,
 } from '../store/actionCreator'
+import { findIndex, shuffle } from './../../../api/utils'
 import {
   ListContent,
   ListHeader,
@@ -32,12 +44,14 @@ function PlayList(props) {
     changePlayListDispatch,
     changeModeDispatch,
     deleteSongDispatch,
+    clearDispatch,
   } = props
   const currentSong = immutableCurrentSong.toJS()
   const playList = immutablePlayList.toJS()
   const sequencePlayList = immutableSequencePlayList.toJS()
   const playListRef = useRef()
   const listWrapperRef = useRef()
+  const confirmRef = useRef()
   const [isShow, setIsShow] = useState(false)
   const transform = prefixStyle('transform')
   const onEnterCB = useCallback(() => {
@@ -69,14 +83,42 @@ function PlayList(props) {
       ></i>
     )
   }
+
+  const handleChangeCurrentIndex = (index) => {
+    if (currentIndex === index) return
+    changeCurrentIndexDispatch(index)
+  }
+  const handleDeleteSong = (e, song) => {
+    e.stopPropagation()
+    deleteSongDispatch(song)
+  }
+
+  const handleShowClear = () => {
+    confirmRef.current.show()
+  }
+  const handleConfirmClear = () => {
+    clearDispatch()
+  }
   const changeMode = (e) => {
     let newMode = (mode + 1) % 3
-    // 具体逻辑比较复杂 后面来实现
+    if (newMode === 0) {
+      changePlayListDispatch(sequencePlayList)
+      let index = findIndex(currentSong, sequencePlayList)
+      changeCurrentIndexDispatch(index)
+    } else if (newMode === 1) {
+      changePlayListDispatch(sequencePlayList)
+    } else if (newMode === 2) {
+      let newList = shuffle(sequencePlayList)
+      let index = findIndex(currentSong, newList)
+      changePlayListDispatch(newList)
+      changeCurrentIndexDispatch(index)
+    }
+    changeModeDispatch(newMode)
   }
   const getPlayMode = () => {
     let content, text
     if (mode === playMode.sequence) {
-      content = '&#xe625'
+      content = '&#xe625;'
       text = '顺序播放'
     } else if (mode === playMode.loop) {
       content = '&#xe653;'
@@ -89,32 +131,18 @@ function PlayList(props) {
       <div>
         <i
           className="iconfont"
-          onClick={(e) => {
-            changeMode(e)
-          }}
+          onClick={(e) => changeMode(e)}
           dangerouslySetInnerHTML={{ __html: content }}
         ></i>
-        <span
-          className="text"
-          onClick={(e) => {
-            changeMode(e)
-          }}
-        >
+        <span className="text" onClick={(e) => changeMode(e)}>
           {text}
         </span>
       </div>
     )
   }
-
-  const handleChangeCurrentIndex = (index) => {
-    if (currentIndex === index) return
-    changeCurrentIndexDispatch(index)
-  }
-  const handleDeleteSong = (e, song) => {
-    console.log('删除')
-    e.stopPropagation()
-    deleteSongDispatch(song)
-  }
+  const handleTouchStart = (e) => {}
+  const handleTouchMove = (e) => {}
+  const handleTouchEnd = (e) => {}
   return (
     <CSSTransition
       in={showPlayList}
@@ -134,11 +162,16 @@ function PlayList(props) {
           className="list_wrapper"
           ref={listWrapperRef}
           onClick={(e) => e.stopPropagation()}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           <ListHeader>
             <h1 className="title">
               {getPlayMode()}
-              <span className="iconfont clear">&#xe63d;</span>
+              <span className="iconfont clear" onClick={handleShowClear}>
+                &#xe63d;
+              </span>
             </h1>
           </ListHeader>
           <ScrollWrapper>
@@ -175,6 +208,13 @@ function PlayList(props) {
             </Scroll>
           </ScrollWrapper>
         </div>
+        <Confirm
+          ref={confirmRef}
+          text={'是否删除全部？'}
+          cancelBtnText={'取消'}
+          confirmBtnText={'确认'}
+          handleConfirm={handleConfirmClear}
+        ></Confirm>
       </PlayListWrapper>
     </CSSTransition>
   )
@@ -203,6 +243,21 @@ const mapDispatchToProps = (dispatch) => ({
   },
   deleteSongDispatch(data) {
     dispatch(deleteSong(data))
+  },
+  clearDispatch() {
+    console.log('clear')
+    // 重置
+    // 1. 清空两个列表
+    dispatch(changePlayList([]))
+    dispatch(changeSequecePlayList([]))
+    // 2. 初始化currentIndex
+    dispatch(changeCurrentIndex(-1))
+    // 关闭PlayList的显示
+    dispatch(changeShowPlayList(false))
+    // 讲当前歌曲置空
+    dispatch(changeCurrentSong({}))
+    // 重置播放状态
+    dispatch(changePlayState(false))
   },
 })
 export default connect(

@@ -39,7 +39,7 @@ export default (state = defaultState, action) => {
 }
 
 const handleDeleteSong = (state, song) => {
-  console.log(123)
+  console.log(song)
   const playList = JSON.parse(JSON.stringify(state.get('playList').toJS()))
   const sequenceList = JSON.parse(
     JSON.stringify(state.get('sequencePlayList').toJS())

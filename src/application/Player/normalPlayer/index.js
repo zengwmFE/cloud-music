@@ -175,7 +175,7 @@ function NormalPlayer(props) {
               <i className="iconfont">&#xe718;</i>
             </div>
             <div className="icon i-right" onClick={() => togglePlayList(true)}>
-              <i className="iconfont">&#xe625;</i>
+              <i className="iconfont">&#xe640;</i>
             </div>
           </Operators>
         </Bottom>
