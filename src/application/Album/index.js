@@ -26,6 +26,7 @@ const mapDispatchToProps = (dispatch) => ({
 function Album(props) {
   const { currentAlbum: currentAlbumImmutable, enterLoading } = props
   const { getAlbumListDispatch } = props
+
   const id = props.match.params.id
   const [showStatus, setShowStatus] = useState(true)
   const [title, setTitle] = useState('歌单')

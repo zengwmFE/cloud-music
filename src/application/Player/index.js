@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { connect } from 'react-redux'
 import { playMode } from '../../api/config'
+import Lyric from '../../api/lyric-parser'
+import { getLyricRequest } from '../../api/request'
 import { findIndex, getSongUrl, isEmptyObj, shuffle } from '../../api/utils'
 import Toast from './../../baseUI/Toast/index'
 import MiniPlayer from './miniPlayer/index'
@@ -46,6 +48,10 @@ function Player(props) {
     changeModeDispatch,
     changePlayListDispatch,
   } = props
+  // 歌词
+  const [currentPlayingLyric, setPlayingLyric] = useState('')
+  const currentLineNum = useRef(0)
+  const currentLyric = useRef()
 
   const changeMode = (index) => {
     let newMode = (mode + 1) % 3
@@ -74,6 +80,9 @@ function Player(props) {
   const clickPlaying = (e, state) => {
     e.stopPropagation()
     togglePlayingDispatch(state)
+    if (currentLyric.current) {
+      currentLyric.current.togglePlay(currentTime * 1000)
+    }
   }
   const updateTime = (e) => {
     setCurrentTime(e.target.currentTime)
@@ -84,6 +93,9 @@ function Player(props) {
     audioRef.current.currentTime = newTime
     if (!playing) {
       togglePlayingDispatch(true)
+    }
+    if (currentLyric.current) {
+      currentLyric.current.seek(newTime * 1000)
     }
   }
 
@@ -124,6 +136,35 @@ function Player(props) {
     songReady.current = true
     alert('播放出错')
   }
+  const handleLyric = ({ lineNum, txt }) => {
+    if (!currentLyric.current) return
+    currentLineNum.current = lineNum
+    setPlayingLyric(txt)
+  }
+  const getLyric = (id) => {
+    let lyric = ''
+    if (currentLyric.current) {
+      currentLyric.current.stop()
+    }
+    getLyricRequest(id)
+      .then((data) => {
+        lyric = data.lrc.lyric
+        console.log(lyric, 'lyric')
+        if (!lyric) {
+          currentLyric.current = null
+          return
+        }
+        currentLyric.current = new Lyric(lyric, handleLyric)
+        console.log(currentLyric, 'currentLyric')
+        currentLyric.current.play()
+        currentLineNum.current = 0
+        currentLyric.current.seek(0)
+      })
+      .catch(() => {
+        songReady.current = true
+        audioRef.current.play()
+      })
+  }
   useEffect(() => {
     if (
       !playList.length ||
@@ -144,6 +185,8 @@ function Player(props) {
       songReady.current = true
     })
     togglePlayingDispatch(true)
+    console.log(current, 'current')
+    getLyric(current.id)
     setCurrentTime(0)
     setDuration((current.dt / 1000) | 0)
   }, [playList, currentIndex])
@@ -182,6 +225,9 @@ function Player(props) {
           togglePlayList={togglePlayListDispatch}
           mode={mode}
           changeMode={changeMode}
+          currentLyric={currentLyric.current}
+          currentPlayingLyric={currentPlayingLyric}
+          currentLineNum={currentLineNum.current}
         />
       ) : null}
       <audio

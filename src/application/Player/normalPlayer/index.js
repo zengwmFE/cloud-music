@@ -1,12 +1,15 @@
 import animations from 'create-keyframe-animation'
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { CSSTransition } from 'react-transition-group'
 import { playMode } from '../../../api/config'
 import { formatPlayTime, getName, prefixStyle } from '../../../api/utils'
 import ProgressBar from '../../../baseUI/progress-bar/index'
+import Scroll from '../../../baseUI/scroll'
 import {
   Bottom,
   CDWrapper,
+  LyricContainer,
+  LyricWrapper,
   Middle,
   NormalPlayerContainer,
   Operators,
@@ -31,9 +34,15 @@ function NormalPlayer(props) {
     handleNext,
     changeMode,
     togglePlayList,
+    currentLineNum,
+    currentPlayingLyric,
+    currentLyric,
   } = props
   const normalPlayerRef = useRef()
   const cdWrapperRef = useRef()
+  const currentState = useRef('')
+  const lyricScrollRef = useRef()
+  const lyricLineRefs = useRef([])
   // 组件代码中加入
   const transform = prefixStyle('transform')
   const enter = () => {
@@ -75,6 +84,7 @@ function NormalPlayer(props) {
     cdWrapperDom.style.transition = ''
     cdWrapperDom.style[transform] = ''
     normalPlayerRef.current.style.display = 'none'
+    currentState.current = ''
   }
 
   const _getPosAndScale = () => {
@@ -104,6 +114,24 @@ function NormalPlayer(props) {
     }
     return content
   }
+  const toggleCurrentState = () => {
+    if (currentState.current !== 'lyric') {
+      currentState.current = 'lyric'
+    } else {
+      currentState.current = ''
+    }
+  }
+  useEffect(() => {
+    if (!lyricScrollRef.current) return
+    let bScroll = lyricScrollRef.current.getBScroll()
+    if (currentLineNum > 5) {
+      // 保持当前歌词在第五条的位置
+      let lineEl = lyricLineRefs.current[currentLineNum - 5].current
+      bScroll.scrollToElement(lineEl, 1000)
+    } else {
+      bScroll.scrollTo(0, 0, 1000)
+    }
+  }, [currentLineNum])
   return (
     <CSSTransition
       classNames="normal"
@@ -133,16 +161,64 @@ function NormalPlayer(props) {
           <h1 className="title">{song.name}</h1>
           <h1 className="subtitle">{getName(song.ar)}</h1>
         </Top>
-        <Middle>
-          <CDWrapper ref={cdWrapperRef}>
-            <div className="cd">
-              <img
-                className="image play"
-                src={song.al.picUrl + '?param=400x400'}
-                alt=""
-              />
-            </div>
-          </CDWrapper>
+        <Middle ref={cdWrapperRef} onClick={toggleCurrentState}>
+          <CSSTransition
+            timeout={400}
+            classNames="fade"
+            in={currentState.current !== 'lyric'}
+          >
+            <CDWrapper
+              style={{
+                visibility:
+                  currentState.current !== 'lyric' ? 'visible' : 'hidden',
+              }}
+            >
+              <div className="cd">
+                <img
+                  className="image play"
+                  src={song.al.picUrl + '?param=400x400'}
+                  alt=""
+                />
+              </div>
+              <p className="playing_lyric">{currentPlayingLyric}</p>
+            </CDWrapper>
+          </CSSTransition>
+          <CSSTransition
+            timeout={400}
+            classNames="fade"
+            in={currentState.current === 'lyric'}
+          >
+            <LyricContainer>
+              <Scroll ref={lyricScrollRef}>
+                <LyricWrapper
+                  style={{
+                    visibility:
+                      currentState.current === 'lyric' ? 'visible' : 'hidden',
+                  }}
+                  className="lyric_wrapper"
+                >
+                  {currentLyric ? (
+                    currentLyric.lines.map((item, index) => {
+                      lyricLineRefs.current[index] = React.createRef()
+                      return (
+                        <p
+                          className={`text ${
+                            currentLineNum === index ? 'current' : ''
+                          }`}
+                          key={item + index}
+                          ref={lyricLineRefs.current[index]}
+                        >
+                          {item.txt}
+                        </p>
+                      )
+                    })
+                  ) : (
+                    <p className="text pure">纯音乐。请欣赏。</p>
+                  )}
+                </LyricWrapper>
+              </Scroll>
+            </LyricContainer>
+          </CSSTransition>
         </Middle>
         <Bottom>
           <ProgressWrapper>

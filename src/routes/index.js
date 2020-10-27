@@ -4,6 +4,7 @@ import Album from '../application/Album/index'
 import Home from '../application/Home/index'
 import Rank from '../application/Rank/index'
 import Recommend from '../application/Recommend/index'
+import Search from '../application/search/index'
 import Singer from '../application/Singer'
 import Singers from '../application/Singers/index'
 export default [
@@ -15,6 +16,12 @@ export default [
         path: '/',
         exact: true,
         render: () => <Redirect to={'/recommend'} />,
+      },
+      {
+        path: '/search',
+        exact: true,
+        key: 'search',
+        component: Search,
       },
       {
         path: '/recommend',

@@ -2,7 +2,7 @@
  * @Author: levi
  * @Date: 2020-10-16 14:40:48
  * @Last Modified by: levi
- * @Last Modified time: 2020-10-16 19:01:10
+ * @Last Modified time: 2020-10-21 17:04:49
  */
 
 import React, { useCallback, useRef, useState } from 'react'
@@ -53,6 +53,15 @@ function PlayList(props) {
   const listWrapperRef = useRef()
   const confirmRef = useRef()
   const [isShow, setIsShow] = useState(false)
+  const [canTouch, setCanTouch] = useState(true)
+  const [startY, setStartY] = useState(0)
+  const [initialed, setInitialed] = useState(0)
+  const [distance, setDistance] = useState(0)
+  const ListContentRef = useRef()
+  const handleScroll = (pos) => {
+    let state = pos.y === 0
+    setCanTouch(state)
+  }
   const transform = prefixStyle('transform')
   const onEnterCB = useCallback(() => {
     setIsShow(true)
@@ -140,9 +149,28 @@ function PlayList(props) {
       </div>
     )
   }
-  const handleTouchStart = (e) => {}
-  const handleTouchMove = (e) => {}
-  const handleTouchEnd = (e) => {}
+  const handleTouchStart = (e) => {
+    if (!canTouch || initialed) return
+    listWrapperRef.current.style['transition'] = ''
+    setStartY(e.nativeEvent.touches[0].pageY)
+    setInitialed(true)
+  }
+  const handleTouchMove = (e) => {
+    if (!canTouch || !initialed) return
+    let distance = e.nativeEvent.touches[0].pageY - startY
+    if (distance < 0) return
+    setDistance(distance)
+    listWrapperRef.current.style.transform = `translate3d(0,${distance}px,0)`
+  }
+  const handleTouchEnd = (e) => {
+    setInitialed(false)
+    if (distance >= 150) {
+      togglePlayListDispatch(false)
+    } else {
+      listWrapperRef.current.style['transition'] = 'all 0.3s'
+      listWrapperRef.current.style[transform] = 'translate3d(0px,0px,0px)'
+    }
+  }
   return (
     <CSSTransition
       in={showPlayList}
@@ -175,7 +203,11 @@ function PlayList(props) {
             </h1>
           </ListHeader>
           <ScrollWrapper>
-            <Scroll>
+            <Scroll
+              ref={ListContentRef}
+              onScroll={(pos) => handleScroll(pos)}
+              bounceTop={false}
+            >
               <ListContent>
                 {playList.map((item, index) => {
                   return (
