@@ -18,6 +18,12 @@ export default [
         render: () => <Redirect to={'/recommend'} />,
       },
       {
+        path: '/album/:id',
+        exact: true,
+        key: 'album',
+        component: Album,
+      },
+      {
         path: '/search',
         exact: true,
         key: 'search',
