@@ -1,23 +1,28 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useRef } from 'react'
 import { connect } from 'react-redux'
 import { CSSTransition } from 'react-transition-group'
 import Loading from '../../baseUI/loading'
 import Scroll from '../../baseUI/scroll'
 import SearchBox from '../../baseUI/search-box'
-import LazyLoad,{forceCheck} from 'react-lazyload'
+import LazyLoad, { forceCheck } from 'react-lazyload'
 import {
   changeEnterLoading,
-  changeSuggestList,
+  getSuggestList,
   getHotKeyWords,
+
 } from './store/actionCreator'
-import { Container, HotKey, ShortcutWrapper,List ,ListItem} from './style'
+import { getSongDetail } from '../Player/store/actionCreator'
+import MusicNote from '../../baseUI/music-note'
+
+import { Container, HotKey, ShortcutWrapper, List, ListItem } from './style'
 // 引入代码
 import { SongItem } from './style';
 import { getName } from '../../api/utils';
 
-function Search(props) {
+function Search (props) {
   const [show, setShow] = useState(false)
   const [query, setQuery] = useState('')
+  const musicNoteRef = useRef()
   const {
     hotList,
     enterLoading,
@@ -32,6 +37,7 @@ function Search(props) {
     changeEnterLoadingDispatch,
     getSuggestListDispatch,
     getSongDetailDispatch,
+
   } = props
   useEffect(() => {
     setShow(true)
@@ -45,7 +51,10 @@ function Search(props) {
     changeEnterLoadingDispatch(true)
     getSuggestListDispatch(q)
   }
-
+  const selectItem = (e, id) => {
+    getSongDetailDispatch(id)
+    musicNoteRef.current.startAnimation({ x: e.nativeEvent.clientX, y: e.nativeEvent.clientY });
+  }
   const renderHotKey = () => {
     let list = hotList ? hotList.toJS() : []
     return (
@@ -66,20 +75,20 @@ function Search(props) {
   }
   const renderSingers = () => {
     let singers = suggestList.artists
-    if(!singers||!singers.list) return 
+    if (!singers || !singers.list) return
     return (
       <List>
         <h1 className="title">相关歌手</h1>
         {
-          singers.map((item,index)=>{
+          singers.map((item, index) => {
             return (
-              <ListItem key={item.accountId+""+index}>
+              <ListItem key={item.accountId + "" + index} onClick={() => props.history.push(`/singers/${item.id}`)}>
                 <div className="img_wrapper">
                   <LazyLoad>
-                    <img src={item.picUrl} width="100%" height="100%" alt="music"/>
+                    <img src={item.picUrl} width="100%" height="100%" alt="music" />
                   </LazyLoad>
                 </div>
-            <span className="name">歌手：{item.name}</span>
+                <span className="name">歌手：{item.name}</span>
               </ListItem>
             )
           })
@@ -89,19 +98,19 @@ function Search(props) {
   }
   const renderAlbum = () => {
     let albums = suggestList.playlists
-    if(!albums||!albums.length) return 
+    if (!albums || !albums.length) return
     return <List>
       <h1 className="title">相关歌单</h1>
       {
-        albums.map((item,index)=>{
+        albums.map((item, index) => {
           return (
-            <ListItem key={item.accountId+""+index}>
+            <ListItem key={item.accountId + "" + index} onClick={() => props.history.push(`/album/${item.id}`)}>
               <div className="img_wrapper">
-                <LazyLoad placeholder={<img width="100%" height="100%" src={require('./music.png')}/>}>
-                <img src={item.coverImgUrl} width="100%" height="100%" alt="music"/>
+                <LazyLoad placeholder={<img width="100%" height="100%" src={require('./music.png')} />}>
+                  <img src={item.coverImgUrl} width="100%" height="100%" alt="music" />
                 </LazyLoad>
               </div>
-          <span className="name">歌单：{item.name}</span>
+              <span className="name">歌单：{item.name}</span>
             </ListItem>
           )
         })
@@ -110,14 +119,14 @@ function Search(props) {
   }
   const renderSongs = () => {
     return (
-      <SongItem style={{paddingLeft: '20px'}}>
+      <SongItem style={{ paddingLeft: '20px' }}>
         {
-          songsList.map(item=>{
+          songsList.map(item => {
             return (
-              <li key={item.id}>
+              <li key={item.id} onClick={(e) => selectItem(e, item.id)}>
                 <div className="info">
-            <span>{item.name}</span>
-            <span>{getName(item.artists)}-{item.album.name}</span>
+                  <span>{item.name}</span>
+                  <span>{getName(item.artists)}-{item.album.name}</span>
                 </div>
               </li>
             )
@@ -136,28 +145,36 @@ function Search(props) {
       unmountOnExit
       onExit={() => props.history.goBack()}
     >
-      <Container>
+      <Container play={songsCount}>
         <div className="search_box_wrapper">
           <SearchBox
             back={searchBack}
             newQuery={query}
             handleQuery={handleQuery}
           ></SearchBox>
-          <ShortcutWrapper show={query}>
-            <Scroll onScroll={forceCheck}>
+          <ShortcutWrapper show={!query}>
+            <Scroll>
               <div>
                 <HotKey>
                   <h1 className="title">搜索</h1>
                   {renderHotKey()}
-                  {renderSingers()}
-                  {renderAlbum()}
-                  {renderSongs()}
+
                 </HotKey>
+              </div>
+            </Scroll>
+          </ShortcutWrapper>
+          <ShortcutWrapper show={query}>
+            <Scroll onScorll={forceCheck}>
+              <div>
+                {renderSingers()}
+                {renderAlbum()}
+                {renderSongs()}
               </div>
             </Scroll>
           </ShortcutWrapper>
           {enterLoading ? <Loading></Loading> : null}
         </div>
+        <MusicNote ref={musicNoteRef}></MusicNote>
       </Container>
     </CSSTransition>
   )
@@ -170,14 +187,17 @@ const mapStateToProps = (state) => ({
   songsList: state.getIn(['search', 'songsList']),
 })
 const mapDispatchToProps = (dispatch) => ({
-  getHotKeyWordsDispatch() {
+  getHotKeyWordsDispatch () {
     dispatch(getHotKeyWords())
   },
-  changeEnterLoadingDispatch(data) {
+  changeEnterLoadingDispatch (data) {
     dispatch(changeEnterLoading(data))
   },
-  getSuggestListDispatch(data) {
-    dispatch(changeSuggestList(data))
+  getSuggestListDispatch (data) {
+    dispatch(getSuggestList(data))
   },
+  getSongDetailDispatch (id) {
+    dispatch(getSongDetail(id))
+  }
 })
 export default connect(mapStateToProps, mapDispatchToProps)(Search)

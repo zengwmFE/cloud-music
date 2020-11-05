@@ -27,14 +27,14 @@ export const changeResultSongs = (data) => ({
 
 export const changeEnterLoading = (data) => ({
   type: SET_ENTER_LOADING,
-  data: data,
+  data,
 })
 
 export const getHotKeyWords = () => {
   return (dispatch) => {
     getHotKeyWordsRequest().then((data) => {
       let list = data.result.hots
-      dispatch(changeHotkeyWords(data))
+      dispatch(changeHotkeyWords(list))
     })
   }
 }
